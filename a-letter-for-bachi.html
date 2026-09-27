@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>A Letter Left Open</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@300;400&display=swap" rel="stylesheet" />
+<style>
+/* ─── RESET & BASE ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0d0d0e;
+  --surface:   #141416;
+  --border:    rgba(255,255,255,0.07);
+  --ivory:     #f0ead8;
+  --ivory-dim: rgba(240,234,216,0.55);
+  --sage:      #8fa48a;
+  --lavender:  #9d96b0;
+  --serif:     'EB Garamond', 'Palatino Linotype', Georgia, serif;
+  --sans:      'Inter', system-ui, -apple-system, sans-serif;
+  --ease:      cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:  cubic-bezier(0, 0, 0.2, 1);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ivory);
+  font-family: var(--serif);
+  font-size: clamp(16px, 2vw, 18px);
+  line-height: 1.75;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Film grain overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.45;
+  mix-blend-mode: overlay;
+}
+
+/* ─── TYPOGRAPHY HELPERS ───────────────────────────────────── */
+.serif { font-family: var(--serif); }
+.sans  { font-family: var(--sans); }
+
+/* ─── SCREEN MANAGEMENT ────────────────────────────────────── */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity 1.2s var(--ease), visibility 1.2s;
+  z-index: 100;
+}
+.screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+/* ─── OPENING SCREEN ───────────────────────────────────────── */
+#screen-open {
+  background: var(--bg);
+  gap: 0;
+  padding: 2rem;
+}
+#screen-open .open-text {
+  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 1.4s var(--ease-out), transform 1.4s var(--ease-out);
+  max-width: 36ch;
+}
+#screen-open .open-sub {
+  font-family: var(--sans);
+  font-size: clamp(0.78rem, 2vw, 0.9rem);
+  color: var(--ivory-dim);
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  text-align: center;
+  margin-top: 1.2rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 1.4s var(--ease-out) 0.6s, transform 1.4s var(--ease-out) 0.6s;
+}
+#screen-open .open-btn {
+  margin-top: 3rem;
+  opacity: 0;
+  transition: opacity 1s var(--ease-out) 1.4s;
+}
+#screen-open.ready .open-text,
+#screen-open.ready .open-sub,
+#screen-open.ready .open-btn { opacity: 1; transform: none; }
+
+/* ─── BUTTONS ──────────────────────────────────────────────── */
+.btn-ghost {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+  border: 1px solid rgba(240,234,216,0.25);
+  padding: 0.75rem 2.2rem;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.4s, border-color 0.4s, background 0.4s;
+  border-radius: 0;
+}
+.btn-ghost:hover {
+  color: var(--ivory);
+  border-color: rgba(240,234,216,0.55);
+  background: rgba(240,234,216,0.04);
+}
+
+/* ─── MAIN CONTENT ─────────────────────────────────────────── */
+#main {
+  opacity: 0;
+  transition: opacity 1.6s var(--ease-out);
+  position: relative;
+  z-index: 10;
+}
+#main.visible { opacity: 1; }
+
+/* ─── SECTION WRAPPERS ─────────────────────────────────────── */
+section {
+  padding: clamp(5rem, 12vw, 9rem) clamp(1.5rem, 8vw, 5rem);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 2.5rem;
+  opacity: 0.75;
+}
+
+/* ─── REVEAL ANIMATION ─────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+}
+.reveal.in-view { opacity: 1; transform: none; }
+.reveal-delay-1 { transition-delay: 0.15s; }
+.reveal-delay-2 { transition-delay: 0.3s; }
+.reveal-delay-3 { transition-delay: 0.45s; }
+.reveal-delay-4 { transition-delay: 0.6s; }
+
+/* ─── LETTER SECTION ───────────────────────────────────────── */
+#letter {
+  padding-top: clamp(7rem, 15vw, 12rem);
+  border-bottom: 1px solid var(--border);
+}
+#letter h1 {
+  font-size: clamp(1.7rem, 5vw, 2.8rem);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.3;
+  margin-bottom: 2.5rem;
+  max-width: 26ch;
+  color: var(--ivory);
+}
+#letter .letter-body {
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  color: var(--ivory-dim);
+  max-width: 56ch;
+  line-height: 1.9;
+}
+#letter .letter-body p + p { margin-top: 1.4em; }
+#letter .signature {
+  margin-top: 3rem;
+  font-style: italic;
+  color: var(--sage);
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+/* ─── DOORS SECTION ────────────────────────────────────────── */
+#doors { border-bottom: 1px solid var(--border); }
+#doors h2 {
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 400;
+  margin-bottom: 3rem;
+  color: var(--ivory);
+  max-width: 40ch;
+}
+.doors-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+@media (min-width: 600px) {
+  .doors-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.door-card {
+  background: var(--surface);
+  padding: 2.4rem 2rem;
+  cursor: pointer;
+  transition: background 0.5s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.door-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--sage), var(--lavender));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease);
+}
+.door-card:hover { background: #1a1a1e; }
+.door-card:hover::before { transform: scaleX(1); }
+.door-card .door-num {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  color: var(--lavender);
+  opacity: 0.7;
+  margin-bottom: 1.2rem;
+  display: block;
+}
+.door-card h3 {
+  font-family: var(--serif);
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ivory);
+}
+.door-card .door-arrow {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  color: var(--sage);
+  margin-top: 1.5rem;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.3s, transform 0.3s;
+  display: block;
+}
+.door-card:hover .door-arrow { opacity: 0.7; transform: none; }
+
+/* ─── CONSTELLATION SECTION ────────────────────────────────── */
+#constellation {
+  padding: 0;
+  max-width: none;
+  position: relative;
+  border-bottom: 1px solid var(--border);
+}
+#constellation-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: clamp(5rem, 12vw, 9rem) clamp(1.5rem, 8vw, 5rem) 3rem;
+}
+#constellation-inner h2 {
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 400;
+  margin-bottom: 1rem;
+  color: var(--ivory);
+}
+#constellation-inner p {
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  color: var(--ivory-dim);
+  letter-spacing: 0.04em;
+  margin-bottom: 2.5rem;
+}
+#star-canvas {
+  display: block;
+  width: 100%;
+  height: clamp(340px, 60vw, 520px);
+  cursor: default;
+}
+.star-tooltip {
+  position: fixed;
+  background: rgba(20,20,22,0.96);
+  border: 1px solid var(--border);
+  padding: 1rem 1.4rem;
+  max-width: min(300px, 90vw);
+  pointer-events: none;
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--ivory);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease);
+  z-index: 500;
+  line-height: 1.7;
+}
+.star-tooltip.visible { opacity: 1; }
+
+/* ─── MEMORIES SECTION ─────────────────────────────────────── */
+#memories { border-bottom: 1px solid var(--border); }
+#memories h2 {
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 400;
+  margin-bottom: 3rem;
+  color: var(--ivory);
+}
+.memory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.memory-item {
+  background: var(--surface);
+  padding: 1.8rem 2rem;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  font-style: italic;
+  color: var(--ivory);
+  line-height: 1.5;
+  transition: background 0.4s;
+}
+.memory-item:hover { background: #181820; }
+.memory-item::before {
+  content: '—';
+  color: var(--sage);
+  opacity: 0.6;
+  margin-right: 0.8em;
+  font-style: normal;
+}
+
+/* ─── ENVELOPES SECTION ────────────────────────────────────── */
+#envelopes { border-bottom: 1px solid var(--border); }
+#envelopes h2 {
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 400;
+  margin-bottom: 3rem;
+  color: var(--ivory);
+}
+.envelope-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 560px) {
+  .envelope-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.envelope-card {
+  border: 1px solid var(--border);
+  padding: 1.6rem 1.8rem;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.4s, border-color 0.4s;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  text-align: left;
+}
+.envelope-card:hover {
+  background: rgba(143,164,138,0.05);
+  border-color: rgba(143,164,138,0.3);
+}
+.envelope-icon {
+  flex-shrink: 0;
+  width: 20px;
+  margin-top: 3px;
+  opacity: 0.5;
+}
+.envelope-title {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--ivory);
+  line-height: 1.4;
+}
+
+/* ─── FINAL SECTION ────────────────────────────────────────── */
+#final {
+  text-align: center;
+  padding-bottom: clamp(8rem, 18vw, 14rem);
+}
+#final .final-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  margin-bottom: 4rem;
+}
+#final .final-line {
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  font-weight: 400;
+  color: var(--ivory);
+}
+#final .final-line:nth-child(2) { color: var(--ivory-dim); font-style: italic; }
+#final .final-line:nth-child(3) { color: var(--ivory-dim); }
+
+.safety-note {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  color: rgba(240,234,216,0.35);
+  max-width: 55ch;
+  margin: 0 auto 3.5rem;
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+}
+
+/* ─── OVERLAY / MODAL ──────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(10,10,12,0.92);
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s var(--ease), visibility 0.6s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.overlay.open { opacity: 1; visibility: visible; }
+.overlay-box {
+  max-width: min(560px, 100%);
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: clamp(2rem, 6vw, 3.5rem);
+  position: relative;
+  transform: translateY(20px);
+  transition: transform 0.6s var(--ease-out);
+}
+.overlay.open .overlay-box { transform: none; }
+.overlay-close {
+  position: absolute;
+  top: 1.2rem; right: 1.4rem;
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: var(--ivory-dim);
+  cursor: pointer;
+  background: none; border: none;
+  transition: color 0.3s;
+}
+.overlay-close:hover { color: var(--ivory); }
+.overlay-label {
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 1.5rem;
+  opacity: 0.75;
+}
+.overlay-title {
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 400;
+  margin-bottom: 1.8rem;
+  color: var(--ivory);
+  line-height: 1.35;
+}
+.overlay-body {
+  font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+  color: var(--ivory-dim);
+  line-height: 1.9;
+}
+.overlay-body p + p { margin-top: 1.2em; }
+
+/* ─── CLOSING SCREEN ───────────────────────────────────────── */
+#screen-close {
+  background: var(--bg);
+  flex-direction: column;
+  gap: 0;
+  padding: 2rem;
+  z-index: 200;
+}
+#screen-close .close-text {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+  text-align: center;
+}
+
+/* ─── SCROLLBAR ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(240,234,216,0.1); }
+
+/* ─── REDUCED MOTION ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ░░ OPENING SCREEN ░░ -->
+<div id="screen-open" class="screen">
+  <p class="open-text serif">I made you a little place, Bachi.</p>
+  <p class="open-sub sans">You don't have to do anything here.</p>
+  <div class="open-btn">
+    <button class="btn-ghost sans" id="btn-enter">Enter quietly</button>
+  </div>
+</div>
+
+<!-- ░░ CLOSING SCREEN ░░ -->
+<div id="screen-close" class="screen hidden">
+  <p class="close-text">Until whenever.</p>
+</div>
+
+<!-- ░░ STAR TOOLTIP ░░ -->
+<div class="star-tooltip" id="star-tooltip"></div>
+
+<!-- ░░ OVERLAY ░░ -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true">
+  <div class="overlay-box">
+    <button class="overlay-close sans" id="overlay-close">close</button>
+    <div class="overlay-label sans" id="overlay-label"></div>
+    <div class="overlay-title serif" id="overlay-title"></div>
+    <div class="overlay-body serif" id="overlay-body"></div>
+  </div>
+</div>
+
+<!-- ░░ MAIN ░░ -->
+<div id="main">
+
+  <!-- 1. LETTER -->
+  <section id="letter">
+    <p class="section-label sans reveal">A letter</p>
+    <h1 class="reveal reveal-delay-1" id="letter-heading">For the days that feel heavier than they should.</h1>
+    <div class="letter-body reveal reveal-delay-2" id="letter-body"></div>
+    <p class="signature reveal reveal-delay-3" id="letter-signature"></p>
+  </section>
+
+  <!-- 2. DOORS -->
+  <section id="doors">
+    <p class="section-label sans reveal">Three doors</p>
+    <h2 class="reveal reveal-delay-1">Wherever you are right now, one of these might be for you.</h2>
+    <div class="doors-grid reveal reveal-delay-2" id="doors-grid"></div>
+  </section>
+
+  <!-- 3. CONSTELLATION -->
+  <section id="constellation" style="max-width:none;">
+    <div id="constellation-inner">
+      <p class="section-label sans reveal">The constellation</p>
+      <h2 class="reveal reveal-delay-1">A few things I keep meaning to tell you.</h2>
+      <p class="sans reveal reveal-delay-2">Click a brighter star.</p>
+    </div>
+    <canvas id="star-canvas" aria-label="Interactive star field"></canvas>
+  </section>
+
+  <!-- 4. MEMORIES -->
+  <section id="memories">
+    <p class="section-label sans reveal">Things I hope you remember</p>
+    <h2 class="reveal reveal-delay-1">Not wisdom. Just reminders.</h2>
+    <div class="memory-list reveal reveal-delay-2" id="memory-list"></div>
+  </section>
+
+  <!-- 5. ENVELOPES -->
+  <section id="envelopes">
+    <p class="section-label sans reveal">Open when</p>
+    <h2 class="reveal reveal-delay-1">For the specific kinds of hard.</h2>
+    <div class="envelope-grid reveal reveal-delay-2" id="envelope-grid"></div>
+  </section>
+
+  <!-- 6. FINAL -->
+  <section id="final">
+    <div class="final-lines">
+      <p class="final-line reveal">You can leave whenever you want.</p>
+      <p class="final-line reveal reveal-delay-1">And you don't have to carry everything alone.</p>
+      <p class="final-line reveal reveal-delay-2">I'll still be here tomorrow.</p>
+    </div>
+    <p class="safety-note sans reveal reveal-delay-3">
+      If things ever feel unsafe or too difficult to manage alone, please reach out to someone you trust or an appropriate local support service. You deserve real help, not just a quiet page.
+    </p>
+    <div class="reveal reveal-delay-4">
+      <button class="btn-ghost sans" id="btn-close">Close</button>
+    </div>
+  </section>
+
+</div><!-- /main -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CONTENT — edit only this object to personalise the entire site
+═══════════════════════════════════════════════════════════════ */
+const CONTENT = {
+
+  letterSignature: "— Someone who thinks about you more than you know, Bachi",
+
+  letter: `<p>I don't know exactly what you're feeling right now, Bachi, and I won't pretend that I do. I just wanted you to have somewhere that asks nothing from you — no performance, no explanation, no particular version of yourself that you have to show up as.</p>
+<p>You've been carrying a lot. I've noticed, even when I haven't known how to say it out loud. And I wanted you to know that someone made this space specifically for you, on a day when I was thinking about you and wishing I could make things lighter.</p>
+<p>You don't have to be okay. You don't have to be getting better. You just have to be here, which you already are.</p>`,
+
+  doors: [
+    {
+      title: "When everything feels heavy",
+      body: `<p>There are days when the weight of things doesn't have a good explanation. It just is — heavy, slow, and present in a way that other people don't always see.</p><p>I want you to know that you don't need to justify that weight to me. You don't need to have a reason that makes sense. Some things are simply hard, and you're allowed to let them be hard without rushing yourself toward the end of it.</p><p>You're still moving. Even on the days it doesn't feel like it — you are still here, still breathing, still finding your way through it. That counts for something I don't have the right words for.</p>`
+    },
+    {
+      title: "When you don't want to talk",
+      body: `<p>Sometimes the hardest part is the expectation that you should explain yourself — to friends, to yourself, to the blank page in front of you. Words can feel like the wrong tool for the shape of what you're holding.</p><p>This page doesn't need you to speak. You can sit here as long as you'd like, in whatever silence feels most like you right now. You don't owe anyone an account of what's happening inside you.</p><p>And if you do find words, eventually, for any of it — I'll be here. I'm not in a hurry. I'm not keeping score of how long things take.</p>`
+    },
+    {
+      title: "When you need a reminder",
+      body: `<p>You have gotten through every difficult day until now. Every single one. I know that might sound small. It probably doesn't feel like a remarkable thing. But I've been watching, and I think it is.</p><p>The version of you that exists on hard days is not a diminished version. It is still you — with all the same things that matter about you, still present, still real, still worth knowing.</p><p>You are not behind. There is no schedule for the kind of thing you're going through. There is just today, and you made it to today, and tomorrow will be its own thing when it arrives.</p>`
+    }
+  ],
+
+  stars: [
+    "You probably don't realise how much your presence matters to the people who know you.",
+    "There are so many things about you that deserve to exist beyond a difficult season.",
+    "You are more than the version of yourself that exists on your worst days.",
+    "The way you care about things — even when it costs you — is not a flaw. It's one of the best things about you.",
+    "You have made it through every hard day until today. That is not nothing.",
+    "Rest is not the same as giving up. Sometimes it is the only responsible thing.",
+    "Someone is glad you exist. More than one someone. Even when it doesn't feel that way."
+  ],
+
+  memories: [
+    "You are allowed to have difficult days without having to earn your way out of them.",
+    "You don't have to explain everything perfectly for it to be true.",
+    "Rest is not failure. It is part of how living works.",
+    "You don't have to figure out your entire life tonight.",
+    "Someone noticing you is sometimes more important than someone fixing you.",
+    "The kindness you extend to other people — you are allowed to turn some of that toward yourself.",
+    "You are not too much. You are also not too little. You are a specific person who is still becoming.",
+    "The fact that you care about doing things well is worth something, even when it exhausts you.",
+    "You are not obligated to be a finished version of yourself."
+  ],
+
+  envelopes: [
+    {
+      title: "Open when you feel alone",
+      message: `<p>Loneliness has a specific quality that's different from simply being by yourself. It's the sense that your particular interior life — the way you see things, the things you notice — isn't quite landing anywhere. That you're broadcasting somewhere no one is tuned in.</p><p>I want you to know that I think about the way you see things. I find it worth something. The version of you that exists when you're not performing anything for anyone is the one I actually want to know. You're not alone in the way you fear you might be. Not completely.</p>`
+    },
+    {
+      title: "Open when you can't find the words",
+      message: `<p>Language fails for the most important things. That's not a flaw in you — it's a flaw in language. Some of what you're carrying doesn't reduce to sentences, and you shouldn't have to compress it just to make it communicable.</p><p>You don't need to be articulate about this. You don't need to name it correctly before it's allowed to be real. It can just be what it is, inside you, without a label, for as long as it needs to be.</p>`
+    },
+    {
+      title: "Open when you've had a terrible day",
+      message: `<p>I'm sorry today was one of those days. They happen more often than they should, and they're exhausting in a way that sleep doesn't always fix.</p><p>You don't have to extract a lesson from this one. Not everything hard is instructive. Sometimes a difficult day is just a difficult day, and the only thing to do is get to the other side of it. You made it to here. That's the thing you did today. Let that be enough for tonight.</p>`
+    },
+    {
+      title: "Open when something good happens",
+      message: `<p>You're allowed to let this one in. You don't have to hold it at a distance in case it gets taken away. You don't have to minimize it or wonder if you've earned it.</p><p>Something good happened. Let yourself feel it — all the way, without reservations. You deserve to have it count. I'm glad it happened. Tell me about it when you want to.</p>`
+    },
+    {
+      title: "Open when you need to remember that someone cares",
+      message: `<p>Someone made you this. On a specific day, thinking about you specifically, wanting you to have somewhere to be without having to be anything in particular.</p><p>That's not a small thing. I made this because you matter to me in a way that I don't always know how to say out loud — because you're worth the effort of trying, even when the effort feels inadequate. You are thought of. You are cared about. That hasn't changed.</p>`
+    }
+  ]
+};
+
+
+/* ═══════════════════════════════════════════════
+   INITIALIZATION
+════════════════════════════════════════════════ */
+
+// Populate letter
+document.getElementById('letter-body').innerHTML = CONTENT.letter;
+document.getElementById('letter-signature').textContent = CONTENT.letterSignature;
+
+// Populate doors
+const doorsGrid = document.getElementById('doors-grid');
+CONTENT.doors.forEach((door, i) => {
+  const card = document.createElement('div');
+  card.className = 'door-card';
+  card.innerHTML = `
+    <span class="door-num sans">${String(i + 1).padStart(2, '0')}</span>
+    <h3>${door.title}</h3>
+    <span class="door-arrow sans">Open ›</span>
+  `;
+  card.addEventListener('click', () => openOverlay('Door', door.title, door.body));
+  doorsGrid.appendChild(card);
+});
+
+// Populate memories
+const memoryList = document.getElementById('memory-list');
+CONTENT.memories.forEach(mem => {
+  const item = document.createElement('div');
+  item.className = 'memory-item';
+  item.textContent = mem;
+  memoryList.appendChild(item);
+});
+
+// Populate envelopes
+const envelopeGrid = document.getElementById('envelope-grid');
+CONTENT.envelopes.forEach((env) => {
+  const card = document.createElement('button');
+  card.className = 'envelope-card';
+  card.innerHTML = `
+    <svg class="envelope-icon" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0.5" y="0.5" width="19" height="15" stroke="currentColor" stroke-opacity="0.5"/>
+      <path d="M0.5 0.5L10 9L19.5 0.5" stroke="currentColor" stroke-opacity="0.5"/>
+    </svg>
+    <span class="envelope-title serif">${env.title}</span>
+  `;
+  card.addEventListener('click', () => openOverlay('Open when', env.title, `<p>${env.message.replace(/<p>/g,'').replace(/<\/p>/g,'</p><p>').replace(/<p><\/p>/g,'')}</p>`));
+  envelopeGrid.appendChild(card);
+});
+
+/* Fix envelope messages to pass HTML properly */
+const envelopeButtons = document.querySelectorAll('.envelope-card');
+envelopeButtons.forEach((btn, i) => {
+  btn.addEventListener('click', () => {
+    openOverlay('Open when', CONTENT.envelopes[i].title, CONTENT.envelopes[i].message);
+  });
+});
+
+
+/* ═══════════════════════════════════════════════
+   OPENING / CLOSING FLOW
+════════════════════════════════════════════════ */
+
+const screenOpen  = document.getElementById('screen-open');
+const screenClose = document.getElementById('screen-close');
+const mainEl      = document.getElementById('main');
+
+window.addEventListener('load', () => {
+  setTimeout(() => screenOpen.classList.add('ready'), 600);
+});
+
+document.getElementById('btn-enter').addEventListener('click', () => {
+  screenOpen.classList.add('hidden');
+  setTimeout(() => {
+    mainEl.classList.add('visible');
+    observeReveals();
+  }, 700);
+});
+
+document.getElementById('btn-close').addEventListener('click', () => {
+  mainEl.style.transition = 'opacity 1.4s';
+  mainEl.style.opacity = '0';
+  setTimeout(() => {
+    screenClose.classList.remove('hidden');
+  }, 1000);
+  setTimeout(() => {
+    mainEl.style.opacity = '';
+    mainEl.style.transition = '';
+    mainEl.classList.remove('visible');
+    screenClose.classList.add('hidden');
+    screenOpen.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    setTimeout(() => mainEl.classList.add('visible'), 200);
+  }, 5000);
+});
+
+
+/* ═══════════════════════════════════════════════
+   OVERLAY
+════════════════════════════════════════════════ */
+
+const overlay = document.getElementById('overlay');
+const overlayLabel = document.getElementById('overlay-label');
+const overlayTitle = document.getElementById('overlay-title');
+const overlayBody  = document.getElementById('overlay-body');
+
+function openOverlay(label, title, body) {
+  overlayLabel.textContent = label;
+  overlayTitle.textContent = title;
+  overlayBody.innerHTML = body;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOverlay() {
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('overlay-close').addEventListener('click', closeOverlay);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeOverlay(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlay(); });
+
+
+/* ═══════════════════════════════════════════════
+   INTERSECTION OBSERVER — reveal on scroll
+════════════════════════════════════════════════ */
+
+function observeReveals() {
+  const items = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  items.forEach(el => io.observe(el));
+}
+
+
+/* ═══════════════════════════════════════════════
+   CONSTELLATION CANVAS
+════════════════════════════════════════════════ */
+
+(function initConstellation() {
+  const canvas = document.getElementById('star-canvas');
+  const ctx    = canvas.getContext('2d');
+  const tooltip = document.getElementById('star-tooltip');
+
+  let W, H, dpr;
+  let stars = [], brightStars = [], lines = [];
+  let mouseX = -9999, mouseY = -9999;
+  let activeStar = null;
+  let tooltipTimeout = null;
+  let raf;
+
+  const STAR_COUNT = 220;
+  const BRIGHT_COUNT = Math.min(CONTENT.stars.length, 7);
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    W = canvas.offsetWidth;
+    H = canvas.offsetHeight;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+    init();
+  }
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  function init() {
+    stars = [];
+    brightStars = [];
+    lines = [];
+
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: rand(0, W), y: rand(0, H),
+        r: rand(0.3, 1.1),
+        alpha: rand(0.15, 0.65),
+        speed: rand(0.012, 0.045),
+        offset: rand(0, Math.PI * 2)
+      });
+    }
+
+    for (let i = 0; i < BRIGHT_COUNT; i++) {
+      brightStars.push({
+        x: rand(W * 0.08, W * 0.92),
+        y: rand(H * 0.1, H * 0.88),
+        r: rand(1.8, 3.2),
+        alpha: rand(0.7, 1),
+        pulse: rand(0, Math.PI * 2),
+        messageIndex: i
+      });
+    }
+
+    // Create some constellation lines between adjacent bright stars
+    const used = new Set();
+    brightStars.forEach((a, ai) => {
+      brightStars.forEach((b, bi) => {
+        if (ai >= bi) return;
+        const key = ai + '-' + bi;
+        if (used.has(key)) return;
+        const dist = Math.hypot(a.x - b.x, a.y - b.y);
+        if (dist < W * 0.35 && Math.random() > 0.45) {
+          lines.push({ ai, bi });
+          used.add(key);
+        }
+      });
+    });
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background gradient
+    const grad = ctx.createRadialGradient(W * 0.5, H * 0.4, 0, W * 0.5, H * 0.4, W * 0.7);
+    grad.addColorStop(0, 'rgba(28,24,38,0.6)');
+    grad.addColorStop(1, 'rgba(13,13,14,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Dim stars
+    stars.forEach(s => {
+      const flicker = Math.sin(t * s.speed + s.offset) * 0.12;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(240,234,216,${Math.max(0, s.alpha + flicker)})`;
+      ctx.fill();
+    });
+
+    // Constellation lines
+    lines.forEach(l => {
+      const a = brightStars[l.ai], b = brightStars[l.bi];
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.strokeStyle = 'rgba(157,150,176,0.12)';
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+    });
+
+    // Bright / clickable stars
+    brightStars.forEach((s, i) => {
+      s.pulse += 0.018;
+      const pulse = Math.sin(s.pulse) * 0.15;
+      const isHovered = activeStar === i;
+
+      // Glow
+      const glow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, isHovered ? 22 : 14);
+      glow.addColorStop(0, `rgba(157,150,176,${(isHovered ? 0.35 : 0.18) + pulse * 0.1})`);
+      glow.addColorStop(1, 'rgba(157,150,176,0)');
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, isHovered ? 22 : 14, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+
+      // Core
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r + (isHovered ? 1 : 0), 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(240,234,216,${s.alpha + pulse})`;
+      ctx.fill();
+
+      // Cross sparkle
+      if (isHovered) {
+        ctx.save();
+        ctx.globalAlpha = 0.45;
+        ctx.strokeStyle = 'rgba(240,234,216,0.7)';
+        ctx.lineWidth = 0.8;
+        [-1, 1].forEach(d => {
+          ctx.beginPath();
+          ctx.moveTo(s.x - 6 * d, s.y);
+          ctx.lineTo(s.x + 6 * d, s.y);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(s.x, s.y - 6 * d);
+          ctx.lineTo(s.x, s.y + 6 * d);
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+    });
+
+    raf = requestAnimationFrame(t => draw(t / 1000));
+  }
+
+  function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function findHoveredStar(x, y) {
+    const RADIUS = 28;
+    for (let i = 0; i < brightStars.length; i++) {
+      const s = brightStars[i];
+      if (Math.hypot(x - s.x, y - s.y) < RADIUS) return i;
+    }
+    return null;
+  }
+
+  canvas.addEventListener('mousemove', e => {
+    const { x, y } = getCanvasCoords(e);
+    const found = findHoveredStar(x, y);
+    activeStar = found;
+    canvas.style.cursor = found !== null ? 'pointer' : 'default';
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    activeStar = null;
+    canvas.style.cursor = 'default';
+  });
+
+  canvas.addEventListener('click', e => {
+    const { x, y } = getCanvasCoords(e);
+    const found = findHoveredStar(x, y);
+    if (found !== null) showTooltip(e, CONTENT.stars[found % CONTENT.stars.length]);
+  });
+
+  canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    const { x, y } = getCanvasCoords(e.changedTouches[0]);
+    const found = findHoveredStar(x, y);
+    if (found !== null) {
+      const fake = { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY };
+      showTooltip(fake, CONTENT.stars[found % CONTENT.stars.length]);
+    }
+  }, { passive: false });
+
+  function showTooltip(e, text) {
+    tooltip.textContent = text;
+    clearTimeout(tooltipTimeout);
+
+    const margin = 16;
+    const tw = Math.min(300, window.innerWidth - margin * 2);
+    tooltip.style.maxWidth = tw + 'px';
+
+    // Position
+    let lx = e.clientX + 18, ly = e.clientY - 10;
+    if (lx + tw > window.innerWidth - margin) lx = e.clientX - tw - 18;
+    if (ly + 100 > window.innerHeight - margin) ly = e.clientY - 100;
+    tooltip.style.left = lx + 'px';
+    tooltip.style.top  = ly + 'px';
+    tooltip.classList.add('visible');
+
+    tooltipTimeout = setTimeout(() => tooltip.classList.remove('visible'), 4200);
+  }
+
+  document.addEventListener('click', e => {
+    if (!canvas.contains(e.target)) tooltip.classList.remove('visible');
+  });
+
+  resize();
+  requestAnimationFrame(t => draw(t / 1000));
+  window.addEventListener('resize', resize);
+})();
+
+</script>
+</body>
+</html>
